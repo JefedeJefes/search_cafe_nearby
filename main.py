@@ -1,5 +1,3 @@
-from textwrap import indent
-
 from flask import Flask, jsonify, render_template, request,Response
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
@@ -106,12 +104,31 @@ def search_cafe():
     else:
         return jsonify(error={"Not found":"Sorry! no cafe found for the particular location"}),404
 
+''' route for adding new cafe'''
 
 
+@app.route("/add", methods=["POST"])
+def add_cafe():
+    try:
+        new_cafe = Cafe(
+            name=request.form.get("name"),
+            map_url=request.form.get("map_url"),
+            img_url=request.form.get("img_url"),
+            location=request.form.get("location"),
+            has_sockets=request.form.get("has_sockets") == "True",
+            has_toilet=request.form.get("has_toilet") == "True",
+            has_wifi=request.form.get("has_wifi") == "True",
+            can_take_calls=request.form.get("can_take_calls") == "True",
+            seats=int(request.form.get("seats")),
+            coffee_price=float(request.form.get("coffee_price"))
+        )
 
+        db.session.add(new_cafe)
+        db.session.commit()
+        return jsonify(response={"success": "Cafe added successfully"}), 201
 
-
-
+    except Exception as e:
+        return jsonify(error={"unsuccessful": "Could not add cafe", "details": str(e)}), 400
 
 if __name__ == "__main__":
     app.run(debug=True)
