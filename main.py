@@ -1,3 +1,5 @@
+
+
 from flask import Flask, jsonify, render_template, request,Response
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
@@ -5,6 +7,7 @@ from sqlalchemy import Integer, String, Boolean , Float
 from random import choice
 import json
 
+from sqlalchemy.orm.base import attribute_str
 
 app = Flask(__name__)
 
@@ -129,6 +132,40 @@ def add_cafe():
 
     except Exception as e:
         return jsonify(error={"unsuccessful": "Could not add cafe", "details": str(e)}), 400
+
+'''Update coffee price'''
+@app.route("/update-price/<int:cafe_id>",methods=["PATCH"])
+def update_price(cafe_id):
+    new_price = request.args.get("new_price")
+    try:
+        cafe = db.session.get(Cafe,cafe_id)
+    except AttributeError:
+        return jsonify(error={"error","No cafe with cafe id found in the database"}),404
+
+    cafe.coffee_price = new_price
+    db.session.commit()
+    return jsonify(error={"Successful":"Coffee Price edited successfully"})
+
+
+'''' Deleting a cafe with cafe_Id'''
+
+@app.route("/delete/<int:cafe_id>",methods=["DELETE"])
+def delete_cafe(cafe_id):
+    api_key = request.args.get("api_key")
+
+    if api_key == "topsecretkey":
+        cafe = db.session.get(Cafe,cafe_id)
+
+        if cafe is None:
+            return jsonify(error={"Not found":"We did not find any cafe in the database"}),404
+
+        db.session.delete(cafe)
+        db.session.commit()
+        return jsonify(error={"Successfull":"Deleted cafe from the database"}),200
+    else:
+        return jsonify(error={"Not authorised":"You are not authorised to access the database"}),400
+
+
 
 if __name__ == "__main__":
     app.run(debug=True)
